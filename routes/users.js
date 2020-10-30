@@ -1,7 +1,7 @@
-var express = require('express');
+const express = require('express');
 const User = require('../models/user');
 
-var router = express.Router();
+const router = express.Router();
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -12,7 +12,7 @@ router.post('/signup', (req, res, next) => {
   User.findOne({username: req.body.username})
   .then(user => {
     if (user) {
-      const err = new Error(`User ${req.body.username} already exists!`)
+      const err = new Error(`User ${req.body.username} already exists!`);
       err.status = 403;
       return next(err);
     } else {
@@ -56,15 +56,15 @@ router.post('/login', (req, res, next) => {
         err.status = 401;
         return next(err);
       } else if (user.username === username && user.password === password) {
-        req.session.user = 'authenticated'
+        req.session.user = 'authenticated';
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/plain');
-        res.end('You are authenticated!');
+        res.end('You are authenticated!')
       }
     })
-    .catch(err => new(err));
+    .catch(err => next(err));
   } else {
-    res.statusCode =200;
+    res.statusCode = 200;
     res.setHeader('Content-Type', 'text/plain');
     res.end('You are already authenticated!');
     }
