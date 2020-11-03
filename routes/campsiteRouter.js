@@ -50,6 +50,7 @@ campsiteRouter.route('/:campsiteId')
 
 .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then(campsite => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -66,7 +67,7 @@ campsiteRouter.route('/:campsiteId')
 .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Campsite.findByIdAndUpdate(req.params.campsiteId, {
         $set: req.body
-    }, {new: true})
+    }, { new: true })
     .then(campsite => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -185,7 +186,11 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
 
 .put(authenticate.verifyUser, (req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then(campsite => {
+        let userId = req.user._id;
+        let authorId = campsite.comments.id(req.params.commentId).author._id;
+        if (userId.equals(authorId)) {
         if (campsite && campsite.comments.id(req.params.commentId)) {
             if (campsite.comments.id(req.params.commentId).author._id.equals(req.user._id)) {
             if (req.body.rating) {
@@ -210,12 +215,22 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
             err.status = 404;
             return next(err);
         }
-     }})
+     } else {
+         const err = new Error('You are not authorized to perform this operation!');
+         res.statusCode = 403;
+         return next(err);
+     }
+    }
+
+    })
     .catch(err => next(err));
 })
 .delete(authenticate.verifyUser, (req, res, next) => {
     Campsite.findById(req.params.campsiteId)
     .then(campsite => {
+        let userId = req.user._id;
+        let authorId = campsite.comments.id(req.params.commentId).author._id;
+        if (userId.equals(authorId)) {
         if (campsite && campsite.comments.id(req.params.commentId)) {
             campsite.comments.id(req.params.commentId).remove();
             campsite.save()
@@ -233,6 +248,11 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
             err = new Error(`Comment ${req.params.commentId} not found`);
             err.status = 404;
             return next(err);
+        }
+    } else {
+        const err = new Error('You are not authorized to perform this operation!');
+        res.statusCode = 403;
+        return next(err);
         }
     })
     .catch(err => next(err));
