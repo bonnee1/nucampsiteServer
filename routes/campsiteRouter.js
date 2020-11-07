@@ -176,16 +176,7 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
         } else {
             err = new Error(`Comment ${req.params.commentId} not found`);
             err.status = 404;
-            return next(err);.
-
-
-
-
-
-
-
-
-            
+            return next(err);
         }
     })
     .catch(err => next(err));
